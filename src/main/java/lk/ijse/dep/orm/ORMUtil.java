@@ -19,89 +19,96 @@ import java.util.Properties;
  **/
 public class ORMUtil {
     public static void init(Properties dbProperties, Class... entities) {
-        String username = dbProperties.getProperty("javafx.persistence.jdbc.username");
-        String password = dbProperties.getProperty("javafx.persistence.jdbc.password");
-        String url = dbProperties.getProperty("javafx.persistence.jdbc.url");
-        String driverClassName = dbProperties.getProperty("javafx.persistence..jdbc.driver_class");
+        String username = dbProperties.getProperty("javax.persistence.jdbc.username");
+        String password = dbProperties.getProperty("javax.persistence.jdbc.password");
+        String url = dbProperties.getProperty("javax.persistence.jdbc.url");
+        String driverClassName = dbProperties.getProperty("javax.persistence.jdbc.driver_class");
+        //get resources from applications.properties resource bundle
 
-        Connection connection =null;
+        Connection connection = null;
         String sqlScript = "";
 
-        if(!url.contains("?")){
-            url += "?allowMultiQueries = true";
-        }else {
-            if (url.contains("allowMultiQueries = true")){
-                url +="&allowMultiQueries = true";
+        //normally mysql can run one query at once but "?allowMultiQueries = true" adding this to url we can input
+        //multiple queries at once
+        if (url.indexOf('?') == -1){
+            url += "?allowMultiQueries=true";
+        }else{
+            if (!url.contains("allowMultiQueries=true")){
+                url += "&allowMultiQueries=true";
             }
         }
 
         if (username == null || password == null || url == null || driverClassName == null) {
-            throw new RuntimeException("Unable to initialize orm framework without username,password ,url,driverClassName");
+            throw new RuntimeException("Unable to initialize ORM framework without user-name, password, url, and driver");
         }
 
         try {
             Class.forName(driverClassName);
             connection = DriverManager.getConnection(url, username, password);
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         } catch (SQLException throwables) {
-            throw new RuntimeException("Failed to establish connection ",throwables);
+            throw new RuntimeException("Failed to establish the connection", throwables);
         }
-        for (Class entity : entities
-        ) {
+
+        for (Class entity : entities) {
             boolean pk = false;
             Annotation entityAnnotation = entity.getDeclaredAnnotation(Entity.class);
-            /*if (entityAnnotation == null) {
-                throw new RuntimeException("Invalid entity class:" + entity.getName());
-            }*/
-            /////////////////creating table////////////////////////
+
+            if (entityAnnotation == null) {
+                throw new RuntimeException("Invalid entity class: " + entity.getName());
+            }
+
             String[] split = entity.getName().split("[.]");
-            String ddl = "CREATE TABLE" + split[split.length - 1] + "(\n";
+            String ddl = "CREATE TABLE " +  split[split.length - 1] + " (\n";
+
             Field[] declaredFields = entity.getDeclaredFields();
-            for (Field declaredField : declaredFields
-            ) {
+            for (Field declaredField : declaredFields) {
+
                 Column columnAnnotation = declaredField.getDeclaredAnnotation(Column.class);
                 Id idAnnotation = declaredField.getDeclaredAnnotation(Id.class);
 
                 if (columnAnnotation != null) {
-                    String columnName = (columnAnnotation.name().trim().isEmpty()) ? (declaredField.getName()) : (columnAnnotation.name());
-                    String columnDefinition = null;
+                    String columnName = (columnAnnotation.name().trim().isEmpty()) ? declaredField.getName() : columnAnnotation.name();
+                    String columnDef = null;
                     if (declaredField.getType() == String.class) {
-                        columnDefinition = "VARCHAR(255)";
+                        columnDef = "VARCHAR(255)";
                     } else if (declaredField.getType() == int.class || declaredField.getType() == long.class ||
                             declaredField.getType() == short.class) {
-                        columnDefinition = "INT";
-                    } else if (declaredField.getType() == float.class || declaredField.getType() == double.class ||
-                            declaredField.getType() == BigDecimal.class) {
-                        columnDefinition = "DECIMAL";
-                    } else {
-                        throw new RuntimeException("Invalid data type");
+                        columnDef = "INT";
+                    }else if (declaredField.getType() == double.class || declaredField.getType() == float.class ||
+                            declaredField.getType() == BigDecimal.class){
+                        columnDef = "DECIMAL";
+                    }else if (declaredField.getType() == boolean.class){
+                        columnDef = "BOOLEAN";
+                    }else{
+                        throw new RuntimeException("Invalid data type; Supported Data Types are String, BigDecimal and primitive data types");
                     }
-                    ddl += columnName + " " + columnDefinition;
+                    ddl += columnName + " " + columnDef;
 
-                    if (pk && idAnnotation != null) {
+                    if (pk && idAnnotation != null){
                         throw new RuntimeException("Composite keys are not supported yet");
                     }
-                    if (idAnnotation != null) {
+                    if (idAnnotation != null){
+                        pk = true;
                         ddl += " PRIMARY KEY";
                     }
                     ddl += ",\n";
                 }
-
-                ddl += ddl.substring(0,ddl.length()-2)+");";
-//                System.out.println(ddl);
-                sqlScript+=ddl;
             }
 
-
+            ddl = ddl.substring(0, ddl.length() - 2) +  ");\n";
+            sqlScript += ddl;
         }
-        Statement stm = null;
+
         try {
-            stm = connection.createStatement();
+            Statement stm = connection.createStatement();
+            System.out.println(sqlScript);
             stm.execute(sqlScript);
             connection.close();
         } catch (SQLException throwables) {
-            throw  new RuntimeException("Failed to create tables",throwables);
+            throw new RuntimeException("Failed to create tables", throwables);
         }
     }
+
 }

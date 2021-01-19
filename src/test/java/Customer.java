@@ -9,22 +9,24 @@ import java.io.Serializable;
  * @since : 19/01/2021
  **/
 @Entity
-public class Customer implements Serializable {
-    @Id
+public class Customer {
     @Column
+    @Id
     private int id;
     @Column
     private String name;
     @Column
     private String address;
+    private String telephone;
 
     public Customer() {
     }
 
-    public Customer(int id, String name, String address) {
+    public Customer(int id, String name, String address, String telephone) {
         this.id = id;
         this.name = name;
         this.address = address;
+        this.telephone = telephone;
     }
 
     public int getId() {
@@ -51,12 +53,21 @@ public class Customer implements Serializable {
         this.address = address;
     }
 
+    public String getTelephone() {
+        return telephone;
+    }
+
+    public void setTelephone(String telephone) {
+        this.telephone = telephone;
+    }
+
     @Override
     public String toString() {
         return "Customer{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", address='" + address + '\'' +
+                ", telephone='" + telephone + '\'' +
                 '}';
     }
 }

@@ -1,5 +1,6 @@
 import lk.ijse.dep.orm.ORMUtil;
 import org.junit.BeforeClass;
+import org.junit.Test;
 
 import java.util.Properties;
 
@@ -11,13 +12,15 @@ import static org.junit.Assert.*;
  **/
 public class ORMUtilTest {
 
-    private static Properties properties =new Properties();
-    @BeforeClass
-    public static void beforeClass()throws Exception {
+    private static Properties properties = new Properties();
 
+    @BeforeClass
+    public static void beforeClass() throws Exception {
+        properties.load(ORMUtilTest.class.getResourceAsStream("/application.properties"));
     }
-    @org.junit.Test
+
+    @Test
     public void init() {
-        ORMUtil.init(new Properties(),Customer.class);
+        ORMUtil.init(properties, Customer.class, Item.class);
     }
 }
