@@ -12,12 +12,12 @@ Data-Base = MySQL
 
 ## How to use this framework:
 
-####pass properties file and entity objects to init method in ORMUtil class.
+#### pass properties file and entity objects to init method in ORMUtil class.
 
 eg:-
 ORMUtil.init(properties, Customer.class, Item.class);
 
-####please put @Entity annotation before entity class and @Id annotation before properties in entity
+#### please put @Entity annotation before entity class and @Id annotation before properties in entity
 
 eg:-
 ````
