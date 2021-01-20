@@ -9,6 +9,11 @@ by looking entities.
 
 Data-Base = MySQL
 
+##### we can simply notify where reflection api used by 
+
+`this.getClass()`
+`ClassNaem.class`
+for  access to the class object.
 
 ## How to use this framework:
 
